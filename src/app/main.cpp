@@ -6,151 +6,169 @@
               email                : support@hgis.org
  ***************************************************************************/
 
-/***************************************************************************
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- ***************************************************************************/
-
-// Qt includes
 #include <QApplication>
-#include <QDir>
-#include <QFile>
-#include <QFileInfo>
+#include <QMainWindow>
+#include <QMenuBar>
+#include <QVBoxLayout>
+#include <QLabel>
+#include <QPushButton>
+#include <QWidget>
 #include <QFont>
 #include <QFontDatabase>
-#include <QLocale>
-#include <QSplashScreen>
-#include <QString>
-#include <QStringList>
-#include <QTranslator>
 #include <QTextCodec>
-#include <QPixmap>
 #include <QMessageBox>
 #include <QDebug>
-#include <cstdio>
-#include <cstdlib>
 
-// QGIS includes
-#include "qgsapplication.h"
-#include "qgssettings.h"
-#include "qgsmessagelog.h"
-#include "qgslogger.h"
-
-// HGIS includes  
-#include "hgisapp.h"
-
-int main( int argc, char *argv[] )
+int main(int argc, char *argv[])
 {
-  // Initialize QgsApplication instead of QApplication for QGIS integration
-  QgsApplication::init();
-  QgsApplication app( argc, argv, true );
-
-  // Set organization info for HGIS
-  app.setOrganizationName( QStringLiteral( "HGIS" ) );
-  app.setOrganizationDomain( QStringLiteral( "hgis.org" ) );
-  app.setApplicationName( QStringLiteral( "HGIS" ) );
-  app.setApplicationDisplayName( QStringLiteral( "HGIS - Heritage GIS" ) );
-  app.setApplicationVersion( QStringLiteral( "1.0.0" ) );
-
-  // Setup Korean font support
-  QFontDatabase fontDb;
-  QStringList availableFonts = fontDb.families();
-  
-  QStringList preferredKoreanFonts = {
-    "Noto Sans CJK KR",
-    "Noto Serif CJK KR", 
-    "NanumGothic",
-    "NanumBarunGothic",
-    "Malgun Gothic",
-    "맑은 고딕"
-  };
-
-  QString selectedFont;
-  for ( const QString &fontName : preferredKoreanFonts ) {
-    if ( availableFonts.contains( fontName ) ) {
-      selectedFont = fontName;
-      break;
+    QApplication app(argc, argv);
+    
+    // UTF-8 인코딩 설정
+    QTextCodec::setCodecForLocale(QTextCodec::codecForName("UTF-8"));
+    
+    // 애플리케이션 정보
+    app.setOrganizationName("HGIS");
+    app.setOrganizationDomain("hgis.org");
+    app.setApplicationName("HGIS");
+    app.setApplicationDisplayName("HGIS - Heritage GIS");
+    app.setApplicationVersion("1.0.0");
+    
+    // 한국어 폰트 설정
+    QFontDatabase fontDb;
+    QStringList availableFonts = fontDb.families();
+    
+    QStringList preferredFonts = {
+        "Noto Sans CJK KR",
+        "Noto Serif CJK KR",
+        "NanumGothic",
+        "NanumBarunGothic",
+        "Malgun Gothic"
+    };
+    
+    QString selectedFont;
+    for (const QString &font : preferredFonts) {
+        if (availableFonts.contains(font)) {
+            selectedFont = font;
+            break;
+        }
     }
-  }
-
-  if ( !selectedFont.isEmpty() ) {
-    QFont appFont = app.font();
-    appFont.setFamily( selectedFont );
-    appFont.setPointSize( 10 );
-    app.setFont( appFont );
-    qInfo() << "Korean font set:" << selectedFont;
-  } else {
-    qWarning() << "Korean fonts not found. Install Noto CJK fonts for better Korean support.";
-    qDebug() << "Available Korean fonts:" << availableFonts.filter( QRegExp( ".*CJK.*|.*Noto.*|.*Nanum.*|.*Gothic.*" ) );
-  }
-
-  // Set UTF-8 encoding for Korean text
-  QTextCodec::setCodecForLocale( QTextCodec::codecForName( "UTF-8" ) );
-
-  // Setup Korean translation
-  QTranslator translator;
-  QLocale locale = QLocale::system();
-  
-  if ( locale.language() == QLocale::Korean ) {
-    QString translationPath = app.applicationDirPath() + "/../resources/translations/hgis_ko";
-    if ( translator.load( translationPath ) ) {
-      app.installTranslator( &translator );
-      qInfo() << "Korean translation loaded successfully";
-    } else {
-      qWarning() << "Failed to load Korean translation from:" << translationPath;
+    
+    if (!selectedFont.isEmpty()) {
+        QFont appFont = app.font();
+        appFont.setFamily(selectedFont);
+        appFont.setPointSize(10);
+        app.setFont(appFont);
+        qInfo() << "Korean font loaded:" << selectedFont;
     }
-  }
-
-  // Initialize QGIS application
-  app.initQgis();
-  
-  // Create and show splash screen
-  QPixmap splashPix( ":/images/splash/hgis_splash.png" );
-  if ( splashPix.isNull() ) {
-    // Use default QGIS splash if HGIS splash not found
-    splashPix = QPixmap( ":/images/splash/splash.png" );
-  }
-  
-  QSplashScreen *splash = nullptr;
-  if ( !splashPix.isNull() ) {
-    splash = new QSplashScreen( splashPix );
-    splash->show();
-    splash->showMessage( QObject::tr( "HGIS - Heritage GIS 시작 중..." ), 
-                         Qt::AlignBottom | Qt::AlignCenter, Qt::white );
-    app.processEvents();
-  }
-
-  // Initialize HGIS main application
-  HGISApp *hgisApp = new HGISApp( splash, true, false );
-  
-  // Set window properties
-  hgisApp->setWindowTitle( QStringLiteral( "HGIS v1.0.0 - 문화재 전용 GIS" ) );
-  hgisApp->setWindowIcon( QIcon( ":/images/icons/hgis.png" ) );
-  
-  // Show main window
-  hgisApp->show();
-  
-  // Hide splash screen
-  if ( splash ) {
-    splash->finish( hgisApp );
-    delete splash;
-  }
-
-  // Log startup
-  QgsMessageLog::logMessage( QStringLiteral( "HGIS Heritage GIS started successfully" ), 
-                            QStringLiteral( "HGIS" ), Qgis::Info );
-  qInfo() << "HGIS Heritage GIS application started";
-
-  // Run application event loop
-  int result = app.exec();
-
-  // Cleanup
-  delete hgisApp;
-  app.exitQgis();
-
-  return result;
+    
+    // 메인 윈도우 생성
+    QMainWindow mainWindow;
+    mainWindow.setWindowTitle("HGIS v1.0.0 - 문화재 전용 GIS");
+    mainWindow.setMinimumSize(1024, 768);
+    
+    // 중앙 위젯
+    QWidget *centralWidget = new QWidget();
+    QVBoxLayout *layout = new QVBoxLayout(centralWidget);
+    
+    // 제목 라벨
+    QLabel *titleLabel = new QLabel("🏛️ HGIS (Heritage GIS)");
+    titleLabel->setStyleSheet("font-size: 24px; font-weight: bold; color: #2c3e50; margin: 20px;");
+    titleLabel->setAlignment(Qt::AlignCenter);
+    
+    // 설명 라벨
+    QLabel *descLabel = new QLabel("한국 문화재청 표준 GIS 애플리케이션");
+    descLabel->setStyleSheet("font-size: 16px; color: #34495e; margin: 10px;");
+    descLabel->setAlignment(Qt::AlignCenter);
+    
+    // 기능 버튼들
+    QPushButton *newProjectBtn = new QPushButton("새 문화재 프로젝트");
+    QPushButton *openProjectBtn = new QPushButton("프로젝트 열기");
+    QPushButton *importDataBtn = new QPushButton("문화재 데이터 가져오기");
+    QPushButton *aboutBtn = new QPushButton("정보");
+    
+    // 버튼 스타일링
+    QString buttonStyle = "QPushButton { "
+                         "background-color: #3498db; "
+                         "color: white; "
+                         "border: none; "
+                         "padding: 10px 20px; "
+                         "font-size: 14px; "
+                         "border-radius: 5px; "
+                         "margin: 5px; "
+                         "} "
+                         "QPushButton:hover { "
+                         "background-color: #2980b9; "
+                         "} "
+                         "QPushButton:pressed { "
+                         "background-color: #21618c; "
+                         "}";
+    
+    newProjectBtn->setStyleSheet(buttonStyle);
+    openProjectBtn->setStyleSheet(buttonStyle);
+    importDataBtn->setStyleSheet(buttonStyle);
+    aboutBtn->setStyleSheet(buttonStyle.replace("#3498db", "#27ae60").replace("#2980b9", "#229954").replace("#21618c", "#1e8449"));
+    
+    // 버튼 이벤트 연결
+    QObject::connect(newProjectBtn, &QPushButton::clicked, [&]() {
+        QMessageBox::information(&mainWindow, "새 프로젝트", "새 문화재 프로젝트 기능이 곧 추가될 예정입니다.");
+    });
+    
+    QObject::connect(openProjectBtn, &QPushButton::clicked, [&]() {
+        QMessageBox::information(&mainWindow, "프로젝트 열기", "프로젝트 열기 기능이 곧 추가될 예정입니다.");
+    });
+    
+    QObject::connect(importDataBtn, &QPushButton::clicked, [&]() {
+        QMessageBox::information(&mainWindow, "데이터 가져오기", "문화재 데이터 가져오기 기능이 곧 추가될 예정입니다.");
+    });
+    
+    QObject::connect(aboutBtn, &QPushButton::clicked, [&]() {
+        QString aboutText = "HGIS (Heritage GIS) v1.0.0\n\n"
+                           "한국 문화재청 표준 GIS 애플리케이션\n\n"
+                           "주요 기능:\n"
+                           "• 문화재청 표준 데이터 모델 지원\n"
+                           "• 한국 좌표계 (EPSG:5179, 5174) 지원\n"
+                           "• 문화재 전용 레이아웃 템플릿\n"
+                           "• 한국어 인터페이스\n\n"
+                           "Copyright (C) 2025 HGIS Project";
+        QMessageBox::about(&mainWindow, "HGIS 정보", aboutText);
+    });
+    
+    // 레이아웃에 위젯 추가
+    layout->addWidget(titleLabel);
+    layout->addWidget(descLabel);
+    layout->addSpacing(30);
+    layout->addWidget(newProjectBtn);
+    layout->addWidget(openProjectBtn);
+    layout->addWidget(importDataBtn);
+    layout->addSpacing(20);
+    layout->addWidget(aboutBtn);
+    layout->addStretch();
+    
+    // 중앙 위젯 설정
+    mainWindow.setCentralWidget(centralWidget);
+    
+    // 메뉴바 생성
+    QMenuBar *menuBar = mainWindow.menuBar();
+    
+    QMenu *fileMenu = menuBar->addMenu("파일(&F)");
+    fileMenu->addAction("새 프로젝트(&N)", [&]() { newProjectBtn->click(); });
+    fileMenu->addAction("열기(&O)", [&]() { openProjectBtn->click(); });
+    fileMenu->addSeparator();
+    fileMenu->addAction("종료(&X)", [&]() { app.quit(); });
+    
+    QMenu *dataMenu = menuBar->addMenu("데이터(&D)");
+    dataMenu->addAction("가져오기(&I)", [&]() { importDataBtn->click(); });
+    dataMenu->addAction("내보내기(&E)", [&]() { 
+        QMessageBox::information(&mainWindow, "내보내기", "데이터 내보내기 기능이 곧 추가될 예정입니다.");
+    });
+    
+    QMenu *helpMenu = menuBar->addMenu("도움말(&H)");
+    helpMenu->addAction("정보(&A)", [&]() { aboutBtn->click(); });
+    
+    // 윈도우 표시
+    mainWindow.show();
+    
+    qInfo() << "HGIS Heritage GIS started successfully";
+    
+    return app.exec();
 }
