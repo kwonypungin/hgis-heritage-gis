@@ -1,0 +1,98 @@
+name: HGIS Development Workflow
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up build environment
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          build-essential \
+          cmake \
+          qt5-default \
+          qttools5-dev \
+          qttools5-dev-tools \
+          libqt5svg5-dev \
+          libgdal-dev \
+          libproj-dev \
+          python3-dev
+    
+    - name: Configure project
+      run: |
+        mkdir -p build
+        cd build
+        cmake ..
+    
+    - name: Build project
+      run: |
+        cd build
+        make -j$(nproc)
+    
+    - name: Run C++ tests
+      run: |
+        cd build
+        if [ -f bin/test_layer_system ]; then
+          export LD_LIBRARY_PATH=$PWD/lib:$LD_LIBRARY_PATH
+          ./bin/test_layer_system || true
+        fi
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install Python dependencies
+      run: |
+        pip install pytest pytest-cov
+    
+    - name: Build Python bindings
+      run: |
+        cd python
+        python3 build_python.py || true
+    
+    - name: Test Python bindings
+      run: |
+        export LD_LIBRARY_PATH=$PWD/build/lib:$LD_LIBRARY_PATH
+        export PYTHONPATH=$PWD/python:$PWD/build/python:$PYTHONPATH
+        python3 python/test_bindings.py || true
+    
+  documentation-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Check for required documentation
+      run: |
+        # Check if development plan exists
+        if [ -f "HGIS_Plan.md" ]; then
+          echo "✅ Development plan exists"
+        else
+          echo "❌ Development plan (HGIS_Plan.md) not found"
+          exit 1
+        fi
+        
+        # Check if README exists
+        if [ -f "README.md" ]; then
+          echo "✅ README exists"
+        else
+          echo "❌ README.md not found"
+          exit 1
+        fi
+        
+        # Check if project is independent from QGIS
+        if grep -q "독립 실행형" HGIS_Plan.md || grep -q "독립 GIS" HGIS_Plan.md; then
+          echo "✅ Project is independent GIS application"
+        else
+          echo "⚠️ Project independence not clearly stated"
+        fi

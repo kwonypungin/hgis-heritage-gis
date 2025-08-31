@@ -1,0 +1,9 @@
+{
+  "hooks": {
+    "user-prompt-submit": "/home/dk/hgis/scripts/github-mcp-reminder.sh \"$PROMPT\" && echo '=== 현재 브랜치와 상태 ===' && git status --short && echo '=== 최근 커밋 ===' && git log --oneline -3"
+  },
+  "statusline": {
+    "enabled": true,
+    "script": "/home/dk/.claude/hgis-statusline.sh"
+  }
+}

@@ -1,0 +1,9 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <qresource prefix="/styles">
+        <file>styles/dark_theme.qss</file>
+    </qresource>
+    <qresource prefix="/translations">
+        <file>translations/hgis_ko.qm</file>
+    </qresource>
+</RCC>
