@@ -1,0 +1,46 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/src/app",
+                "${workspaceFolder}/src/core",
+                "${workspaceFolder}/src/gui",
+                "/usr/include/qt5",
+                "/usr/include/x86_64-linux-gnu/qt5",
+                "/usr/include/x86_64-linux-gnu/qt5/QtCore",
+                "/usr/include/x86_64-linux-gnu/qt5/QtGui", 
+                "/usr/include/x86_64-linux-gnu/qt5/QtWidgets",
+                "/usr/include/x86_64-linux-gnu/qt5/QtNetwork",
+                "/usr/include/x86_64-linux-gnu/qt5/QtXml",
+                "/usr/include/x86_64-linux-gnu/qt5/QtSql",
+                "/usr/include/x86_64-linux-gnu/qt5/QtSvg",
+                "/usr/include/x86_64-linux-gnu/qt5/QtPrintSupport",
+                "/usr/include/x86_64-linux-gnu/qt5/QtConcurrent",
+                "/usr/include/qgis",
+                "/usr/include/gdal",
+                "/usr/include/proj",
+                "/usr/local/include/qgis",
+                "/opt/qgis/include"
+            ],
+            "defines": [
+                "QT_CORE_LIB",
+                "QT_GUI_LIB", 
+                "QT_WIDGETS_LIB",
+                "QT_NETWORK_LIB",
+                "QT_XML_LIB",
+                "QT_SQL_LIB",
+                "QT_SVG_LIB",
+                "QT_PRINTSUPPORT_LIB",
+                "QT_CONCURRENT_LIB"
+            ],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "linux-gcc-x64",
+            "configurationProvider": "ms-vscode.cmake-tools"
+        }
+    ],
+    "version": 4
+}
